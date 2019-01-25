@@ -1,0 +1,112 @@
+package reporting;
+
+import org.apache.poi.hssf.util.HSSFColor;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Workbook;
+
+public class ExcelStyling {
+	CellStyle yellowCellStyle = null;
+	CellStyle brownCellStyle = null;
+	CellStyle blueCellStyle = null;
+	CellStyle redCellStyle = null;
+	CellStyle blackCellStyle = null;
+	CellStyle greyCellStyle = null;
+	Workbook wb;
+
+	public ExcelStyling(Workbook wb) {
+		this.wb = wb;
+	}
+
+	public CellStyle getBrownCellStyle() {
+		if (brownCellStyle == null) {
+			brownCellStyle = wb.createCellStyle();
+			brownCellStyle.setFillForegroundColor(HSSFColor.BROWN.index);
+			brownCellStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+			Font font = wb.createFont();
+			font.setColor(IndexedColors.WHITE.getIndex());
+			font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+			font.setFontHeightInPoints((short) 10);
+			font.setFontName("Helvetia");
+			brownCellStyle.setFont(font);
+		}
+		return brownCellStyle;
+	}
+	
+	public CellStyle getBlueCellStyle() {
+		if (blueCellStyle == null) {
+			blueCellStyle = wb.createCellStyle();
+			blueCellStyle.setFillForegroundColor(HSSFColor.BLUE.index);
+			blueCellStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+			Font font = wb.createFont();
+			font.setColor(IndexedColors.WHITE.getIndex());
+			font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+			font.setFontHeightInPoints((short) 10);
+			font.setFontName("Helvetia");
+			blueCellStyle.setFont(font);
+		}
+		return blueCellStyle;
+	}
+	
+	public CellStyle getRedCellStyle() {
+		if (redCellStyle == null) {
+			redCellStyle = wb.createCellStyle();
+			redCellStyle.setFillForegroundColor(HSSFColor.RED.index);
+			redCellStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+			Font font = wb.createFont();
+			font.setColor(IndexedColors.WHITE.getIndex());
+			font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+			font.setFontHeightInPoints((short) 10);
+			font.setFontName("Helvetia");
+			redCellStyle.setFont(font);
+		}
+		return redCellStyle;
+	}
+	
+	public CellStyle getBlackCellStyle() {
+		if (blackCellStyle == null) {
+			blackCellStyle = wb.createCellStyle();
+			blackCellStyle.setFillForegroundColor(HSSFColor.BLACK.index);
+			blackCellStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+			Font font = wb.createFont();
+			font.setColor(IndexedColors.WHITE.getIndex());
+			font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+			font.setFontHeightInPoints((short) 10);
+			font.setFontName("Helvetia");
+			blackCellStyle.setFont(font);
+		}
+		return blackCellStyle;
+	}
+	
+	public CellStyle getYellowCellStyle() {
+		if (yellowCellStyle == null) {
+			yellowCellStyle = wb.createCellStyle();
+			yellowCellStyle.setFillForegroundColor(HSSFColor.YELLOW.index);
+			yellowCellStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+			Font font = wb.createFont();
+			font.setColor(IndexedColors.BLACK.getIndex());
+			font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+			font.setFontHeightInPoints((short) 10);
+			font.setFontName("Helvetia");
+			yellowCellStyle.setFont(font);
+		}
+		return yellowCellStyle;
+	}
+	
+	public CellStyle getGreyCellStyle() {
+		if (greyCellStyle == null) {
+			greyCellStyle = wb.createCellStyle();
+			greyCellStyle.setFillForegroundColor(HSSFColor.GREY_25_PERCENT.index);
+			greyCellStyle.setFillPattern(CellStyle.SOLID_FOREGROUND);
+			Font font = wb.createFont();
+			font.setColor(IndexedColors.BLACK.getIndex());
+			font.setBoldweight(Font.BOLDWEIGHT_BOLD);
+			font.setFontHeightInPoints((short) 10);
+			font.setFontName("Helvetia");
+			greyCellStyle.setFont(font);
+		}
+		return greyCellStyle;
+	}
+
+}
