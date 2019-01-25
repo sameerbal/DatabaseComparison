@@ -1,0 +1,265 @@
+package reporting;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.List;
+import javax.swing.JOptionPane;
+
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellUtil;
+import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.hssf.usermodel.HSSFDataFormat;
+import org.apache.poi.hssf.usermodel.HSSFFont;
+import org.apache.poi.hssf.usermodel.HSSFRow;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+
+import reporting.ExcelStyling;
+
+public class ExcelReport {
+
+	public static HSSFWorkbook workbook;
+	public static FileOutputStream fos;
+	public static FileInputStream fis;
+	public static File file;
+	public static ExcelStyling cellStyling;
+
+	public static void newWorkbook(String fileName) throws IOException {
+		file = new File(fileName);
+		try {
+			fos = new FileOutputStream(file);
+			workbook = new HSSFWorkbook();
+			ExcelStyling cellStyling = new ExcelStyling(workbook);
+
+			HSSFSheet sheet0 = workbook.createSheet("Summary");
+
+			HSSFSheet sheet1 = workbook.createSheet("DataMismatch");
+
+			Row row = sheet1.createRow(0);
+			Cell cell0 = row.createCell(0);
+			cell0.setCellValue(DBDriver.PrimaryKey);
+			CellUtil.getCell(row, 0).setCellStyle(cellStyling.getBlackCellStyle());
+
+			Cell cell1 = row.createCell(1);
+			cell1.setCellValue("Column Name");
+			CellUtil.getCell(row, 1).setCellStyle(cellStyling.getBlueCellStyle());
+
+			Cell cell2 = row.createCell(2);
+			cell2.setCellValue("Source Value");
+			CellUtil.getCell(row, 2).setCellStyle(cellStyling.getBrownCellStyle());
+
+			Cell cell3 = row.createCell(3);
+			cell3.setCellValue("Target Value");
+			CellUtil.getCell(row, 3).setCellStyle(cellStyling.getYellowCellStyle());
+
+			HSSFSheet sheet2 = workbook.createSheet("Row Missing in Source");
+
+			Row row1 = sheet2.createRow(0);
+			Cell cell4 = row1.createCell(0);
+
+			HSSFSheet sheet3 = workbook.createSheet("Row Missing in Target");
+
+			Row row2 = sheet3.createRow(0);
+			Cell cell6 = row2.createCell(0);
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, e.toString(), "Error!", JOptionPane.WARNING_MESSAGE);
+		} finally {
+			workbook.write(fos);
+			fos.flush();
+			fos.close();
+			System.out.println("done");
+		}
+	}
+
+	public static void openExcel(String Path)
+	{
+		try {
+			fis = new FileInputStream(Path);
+			workbook = new HSSFWorkbook(fis);
+			//fos = new FileOutputStream(new File(Path));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		cellStyling = new ExcelStyling(workbook);
+	}
+	
+	public static synchronized void writeToExcelDataMismatch(String Path, int rowIndex, String[] array,
+			String PrimaryK) {
+		try {
+			HSSFSheet worksheet = workbook.getSheetAt(1);
+			Row row = worksheet.createRow(rowIndex);
+			for (int j = 0; j <= array.length - 1; j++) {
+				row.createCell(j).setCellValue(array[j].trim());
+				CellUtil.getCell(row, 0).setCellStyle(cellStyling.getYellowCellStyle());
+				CellUtil.getCell(row, 2).setCellStyle(cellStyling.getGreyCellStyle());
+				CellUtil.getCell(row, 3).setCellStyle(cellStyling.getRedCellStyle());
+				for(int i =6;i<array.length;i+=4)
+				{
+					Row row1 = worksheet.getRow(0);
+
+					Cell cell1 = row1.createCell(i-1);
+					cell1.setCellValue("Column Name");
+					CellUtil.getCell(row1, i-1).setCellStyle(cellStyling.getBlueCellStyle());
+
+					Cell cell2 = row1.createCell(i);
+					cell2.setCellValue("Source Value");
+					CellUtil.getCell(row1, i).setCellStyle(cellStyling.getBrownCellStyle());
+
+					Cell cell3 = row1.createCell(i+1);
+					cell3.setCellValue("Target Value");
+					CellUtil.getCell(row1, i+1).setCellStyle(cellStyling.getYellowCellStyle());
+					
+					CellUtil.getCell(row, i).setCellStyle(cellStyling.getGreyCellStyle());
+					CellUtil.getCell(row, i+1).setCellStyle(cellStyling.getRedCellStyle());
+				}
+			}
+			FileOutputStream fos = new FileOutputStream(Path);
+			workbook.write(fos);
+			fos.flush();
+			fos.close();
+
+		} catch (Exception e) {
+
+			System.out.println("Came inside Exception");
+			System.out.println((e.getMessage()));
+			JOptionPane.showMessageDialog(null, e.toString(), "Error!", JOptionPane.WARNING_MESSAGE);
+
+		}
+	}
+
+	public static void writeToExcelRowMissingSource(String Path, int rowIndex, String[] array, String[] columnName,
+			String PrimaryKey) {
+		try {
+			HSSFSheet worksheet = workbook.getSheetAt(2);
+			Row row = worksheet.createRow(rowIndex);
+			for (int j = 0; j <= array.length - 1; j++) {
+				row.createCell(j).setCellValue(array[j].trim());
+				CellUtil.getCell(row, 0).setCellStyle(cellStyling.getYellowCellStyle());
+			}
+			Row row0 = worksheet.createRow(0);
+			for (int j = 0; j <= columnName.length - 1; j++) {
+				row0.createCell(j + 1).setCellValue(columnName[j].trim());
+				CellUtil.getCell(row0, j+1).setCellStyle(cellStyling.getBlueCellStyle());
+			}
+			row0.createCell(0).setCellValue(PrimaryKey);
+			CellUtil.getCell(row0, 0).setCellStyle(cellStyling.getBlackCellStyle());
+			FileOutputStream fos = new FileOutputStream(Path);
+			workbook.write(fos);
+			fos.flush();
+			fos.close();
+
+		} catch (Exception e) {
+
+			System.out.println("Came inside Exception");
+			System.out.println((e.getMessage()));
+			JOptionPane.showMessageDialog(null, e.toString(), "Error!", JOptionPane.WARNING_MESSAGE);
+
+		}
+	}
+
+	public static void writeToExcelRowMissingTarget(String Path, int rowIndex, String[] array, String[] columnName,
+			String PrimaryKey) {
+		try {
+			HSSFSheet worksheet = workbook.getSheetAt(3);
+			Row row = worksheet.createRow(rowIndex);
+			for (int j = 0; j <= array.length - 1; j++) {
+				row.createCell(j).setCellValue(array[j].trim());
+				CellUtil.getCell(row, 0).setCellStyle(cellStyling.getYellowCellStyle());
+			}
+			Row row0 = worksheet.createRow(0);
+			for (int j = 0; j <= columnName.length - 1; j++) {
+				row0.createCell(j + 1).setCellValue(columnName[j].trim());
+				CellUtil.getCell(row0, j+1).setCellStyle(cellStyling.getBlueCellStyle());
+			}
+			row0.createCell(0).setCellValue(PrimaryKey);
+			CellUtil.getCell(row0, 0).setCellStyle(cellStyling.getBlackCellStyle());
+			FileOutputStream fos = new FileOutputStream(Path);
+			workbook.write(fos);
+			fos.flush();
+			fos.close();
+
+		} catch (Exception e) {
+
+			System.out.println("Came inside Exception");
+			System.out.println((e.getMessage()));
+
+			JOptionPane.showMessageDialog(null, e.toString(), "Error!", JOptionPane.WARNING_MESSAGE);
+
+		}
+	}
+
+	public static void writeToExcelSummary(String Path, String sourceCount, String targetCount, String rowMissingSource,
+			String rowMissingTarget) {
+		try {
+			HSSFSheet worksheet = workbook.getSheetAt(0);
+			
+			Row row0 = worksheet.createRow(5);
+			row0.createCell(5).setCellValue(sourceCount);
+			CellUtil.getCell(row0, 5).setCellStyle(cellStyling.getBrownCellStyle());
+			 
+
+			Row row1 = worksheet.createRow(6);
+			row1.createCell(5).setCellValue(targetCount);
+			CellUtil.getCell(row1, 5).setCellStyle(cellStyling.getBlueCellStyle());
+			
+
+			Row row2 = worksheet.createRow(7);
+			row2.createCell(5).setCellValue(rowMissingSource);
+			CellUtil.getCell(row2, 5).setCellStyle(cellStyling.getBlackCellStyle());
+			
+			Row row3 = worksheet.createRow(8);
+			row3.createCell(5).setCellValue(rowMissingTarget);
+			CellUtil.getCell(row3, 5).setCellStyle(cellStyling.getRedCellStyle());
+
+			FileOutputStream fos = new FileOutputStream(Path);
+			workbook.write(fos);
+			fos.flush();
+			fos.close();
+
+		} catch (Exception e) {
+
+			System.out.println("Came inside Exception");
+			System.out.println((e.getMessage()));
+			JOptionPane.showMessageDialog(null, e.toString(), "Error!", JOptionPane.WARNING_MESSAGE);
+
+		}
+	}
+	
+	public static void closeExcel()
+	{
+		try {
+			fis.close();
+			//fos.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static boolean isStillOpenOnWindows(File file) {
+		try {
+			FileOutputStream out = new FileOutputStream(file, true);
+
+			out.close();
+			// Not open anymore
+			return false;
+		} catch (IOException e) {
+			// Still open
+			JOptionPane.showMessageDialog(null, e.toString(), "Error!", JOptionPane.WARNING_MESSAGE);
+			return true;
+		}
+	}
+
+}
