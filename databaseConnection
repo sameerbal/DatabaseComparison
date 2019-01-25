@@ -1,0 +1,155 @@
+package reporting;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Collection;
+import java.util.Properties;
+
+import javax.swing.JOptionPane;
+
+
+
+public class databaseConnection {
+
+	//public static  String srcUserName;
+	//public static  String srcPassword ;
+	//public static  String srcPort ;
+	//public  static String srcEnvironment;
+
+	//public static String trgUserName ;
+	//public static String trgPassword;
+	//public static String targetPort ;
+	//public  static String targetEnvironment;
+
+	//public String[] TargetCredentials;
+	//public static String[] SourceCredentials;
+	//public static String url_Property ;
+	//public static String url ;
+
+	public static Statement srcStatement;
+	public static Statement trgStatement;
+	public static ResultSet srcResultSet;
+	public static ResultSet trgResultSet;
+
+
+	public static Connection connection;
+
+
+	//GetConnection Method:	
+
+	public  static Connection getConnection_Source() throws SQLException, IOException, ClassNotFoundException {
+
+		//Initialising Driver
+
+		try {
+		Class.forName(source_and_target_Credentials.sourcedrivername);
+		
+
+			connection=DriverManager.getConnection(source_and_target_Credentials.sourceurl, source_and_target_Credentials.sourceUserName, source_and_target_Credentials.sourcePassword);  
+			connection.setAutoCommit(false);
+			System.out.println(" Source DB -Connection Established Successfully'");
+		}
+		catch(Exception ex) {
+			//ex.printStackTrace();
+			 //JOptionPane.showMessageDialog(null,ex.toString(),"Error!",JOptionPane.WARNING_MESSAGE);
+			
+			System.out.println("Source DB Exception : "+ex.getMessage());
+			 JOptionPane.showMessageDialog(null,ex.toString(),"Error!",JOptionPane.WARNING_MESSAGE);
+		}
+
+
+		return connection; 
+
+
+	}
+
+	//Execute Source Query Method:
+
+
+
+
+	public static Connection getConnection_Target() throws SQLException, IOException, ClassNotFoundException {
+
+
+
+		// Initializing the driver			
+
+		try {
+		Class.forName(source_and_target_Credentials.targetdrivername); 		
+
+			connection=DriverManager.getConnection(source_and_target_Credentials.targeturl, source_and_target_Credentials.targetUserName, source_and_target_Credentials.targetPassword);  
+			connection.setAutoCommit(false);
+			System.out.println(" target DB -Connection Established Successfully'");
+		}
+		catch(Exception ex) {
+			ex.printStackTrace();
+			 JOptionPane.showMessageDialog(null,ex.toString(),"Error!",JOptionPane.WARNING_MESSAGE);
+			System.out.println("Please Provide Valid Credentials");
+
+
+			//System.out.println("target DB Exception : "+ex.getMessage());
+		}
+		return connection; 
+
+
+	}  
+
+	public   ResultSet execute_SourceQuery(Connection connection,String sourceSQL) throws SQLException  {
+
+		try {
+			System.out.println("Executing source Query");
+			
+			srcStatement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_UPDATABLE);
+			srcStatement.setFetchSize(2000);
+			
+			srcResultSet = srcStatement.executeQuery(sourceSQL);
+			//srcStatement.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			 JOptionPane.showMessageDialog(null,e.toString(),"Error!",JOptionPane.WARNING_MESSAGE);
+			e.printStackTrace();
+		}
+		
+		return srcResultSet;
+		
+		/*
+		SqlPath.srcStatement=connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_UPDATABLE);
+		SqlPath.srcStatement.setFetchSize(2000);
+		SqlPath.srcResultSet = SqlPath.srcStatement.executeQuery(sourceSQL);
+		return SqlPath.srcResultSet;
+		*/
+		
+	}
+
+	//Target Execute Query 
+
+	public ResultSet execute_targetQuery(Connection connection,String targetSQL) throws Exception  {
+		try {
+			System.out.println("Executing Target Query");
+			
+       trgStatement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_UPDATABLE);
+       trgStatement.setFetchSize(2000);
+			
+       trgResultSet = trgStatement.executeQuery(targetSQL);	
+//trgStatement.close();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			 JOptionPane.showMessageDialog(null,e.toString(),"Error!",JOptionPane.WARNING_MESSAGE);
+			e.printStackTrace();
+		}
+	return trgResultSet;
+	}
+
+
+}
+
+
+
+
