@@ -1,0 +1,61 @@
+package reporting;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
+
+public class ResultSetHelper {
+
+    private final Map<String, Integer> columnMap;
+
+    public ResultSetHelper(ResultSet rs) throws SQLException {
+    	
+        this.columnMap = new HashMap<>();
+        ResultSetMetaData md = rs.getMetaData();
+        int columnCount = md.getColumnCount();
+        for (int index = 1; index <= columnCount; index++) {
+            String columnName = md.getColumnLabel(index);
+            System.out.println(columnName);
+            if (!columnMap.containsKey(columnName)) {
+                columnMap.put(columnName, index);
+            }
+            /*try {
+				Thread.sleep(4000);
+			} catch (InterruptedException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+            String tableAlias = md.getTableName(index);
+            try {
+				Thread.sleep(4000);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}*/
+            
+            /*Commenting Table name method since its not used anywhere
+            String tableAlias = md.getTableName(index);
+            
+            System.out.println(tableAlias);
+            
+            if (tableAlias != null && !tableAlias.trim().isEmpty()) {
+                columnMap.put(tableAlias + "." + columnName, index);
+            } */
+        }
+    }
+
+    public Map<String, Integer> getColumnMap() {
+		return columnMap;
+	}
+
+	public Integer getColumnIndex(String columnName) {
+        return columnMap.get(columnName);
+    }
+
+    public Integer getColumnIndex(String tableAlias, String columnName) {
+        return columnMap.get(tableAlias + "." + columnName);
+    }
+    
+
+}
