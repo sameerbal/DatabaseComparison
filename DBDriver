@@ -1,0 +1,313 @@
+package reporting;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Scanner;
+//import reporting.ExcelReport;
+import java.util.Set;
+
+import javax.swing.JOptionPane;
+
+public class DBDriver {
+
+	static int Source_totalRows = 0;
+	static int Target_totalRows = 0;
+	static int Datamissmatch=0,rowMissSource = 0, rowMissTarget = 0;
+	static String PKvalue = "";
+	public static String PrimaryKey="";
+	static boolean flag = false;
+
+	private static Map<String, List<TableCellData>> readDB(ResultSet resultSet, String Current_Query)
+			throws SQLException {
+
+		ResultSetMetaData srcRSMD = resultSet.getMetaData();
+		Map<String, List<TableCellData>> readFileResult = new HashMap<String, List<TableCellData>>();
+
+		ResultSetHelper helper = new ResultSetHelper(resultSet);
+
+		int srcColNum = srcRSMD.getColumnCount();
+
+		List<String> readPropertiesFile = readPropertiesFile(Current_Query, resultSet);
+		List<Integer> getSelectedColumns = getSelectedColumns(helper, readPropertiesFile);
+		while (resultSet.next()) {
+			List<TableCellData> data = new ArrayList<TableCellData>();
+			StringBuffer buffer = new StringBuffer();
+			for (int i = 1; i <= srcColNum; i++) {
+				String string = resultSet.getString(i);
+
+				if (getSelectedColumns.contains(i)) {
+					buffer.append(string);
+					buffer.append(",");
+
+				}
+				TableCellData celldata = new TableCellData();
+				celldata.setCellValue(string);
+				celldata.setColumNumber(i);
+				data.add(celldata);
+
+			}
+			String key = buffer.toString();
+			
+			
+			
+			if (key.length() > 1)
+				key = key.substring(0, key.length() - 1);
+			// if (canAddColumn(key, readPropertiesFile)) {
+			readFileResult.put(key, data);
+			// }
+
+		}
+		return readFileResult;
+	}
+
+	private static List<Integer> getSelectedColumns(ResultSetHelper helper, List<String> allColumns) {
+		List<Integer> list = new ArrayList<Integer>();
+		for (String column : allColumns) {
+			if (helper.getColumnIndex(column.trim()) != null) {
+				list.add(helper.getColumnIndex(column.trim()));
+			}
+		}
+		return list;
+	}
+
+	// get source row count
+	private static int getSourceRows(ResultSet SourceResultSet) {
+		try {
+
+			while (SourceResultSet.next()) {
+				Source_totalRows++;
+			}
+
+			SourceResultSet.beforeFirst();
+			// System.out.println("Source Table Total Rows count = " + Source_totalRows);
+
+			return Source_totalRows;
+		} catch (Exception ex) {
+			System.out.println("The Source Table Row handling Exception : " + ex.getMessage());
+			JOptionPane.showMessageDialog(null, ex.toString(), "Error!", JOptionPane.WARNING_MESSAGE);
+			return 0;
+		}
+		// System.out.println("Total Source Table Row counts = "+ Source_totalRows );
+		// return Source_totalRows;
+
+	}
+
+	// get source row count
+	private static int getTargetRows(ResultSet TargetResultSet) {
+		// int Target_totalRows = 0;
+		try {
+			// ResultSet rs = //Execute your query...
+
+			// int rowCount = 0;
+
+			while (TargetResultSet.next()) {
+				// Process the row.
+				// TargetResultSet.first();
+				Target_totalRows++;
+			}
+
+			TargetResultSet.beforeFirst();
+
+			// System.out.println("Target Table Total Rows count = " + Target_totalRows);
+			return Target_totalRows;
+			// TargetResultSet.first();
+		} catch (Exception ex) {
+			System.out.println("The Target Table Row handling Exception : " + ex.getMessage());
+			JOptionPane.showMessageDialog(null, ex.toString(), "Error!", JOptionPane.WARNING_MESSAGE);
+			return 0;
+		}
+
+	}
+
+	/**
+	 * 
+	 * PK VALUE HANDLER
+	 * 
+	 * 
+	 */
+
+	private static List<String> readPropertiesFile(String MyQuery, ResultSet srcRSMD) {
+		// Properties prop = new Properties();
+		// FileInputStream output = null;
+
+		try {
+
+			String[] PkHandlerArray = MyQuery.split("ORDER BY ");
+			List<String> asList = Arrays.asList(PkHandlerArray[PkHandlerArray.length - 1].split(","));
+			for (String s : asList) {
+				PKvalue += s.trim() + ",";
+			}
+			return asList;
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			JOptionPane.showMessageDialog(null, ex.toString(), "Error!", JOptionPane.WARNING_MESSAGE);
+			return null;
+		}
+	}
+
+	public static void comparatorUtility(ResultSet srcResultSet, ResultSet trgResultSet, String sourceFileName,
+			String targetFileName, String srcSQL, String trgSQL, String getOutputfilefolder) {
+		try {
+			// get total rows count from the source table before comparison
+			System.out.println("\n");
+			System.out.println("DB Comparator Process Started...");
+			System.out.println("\n");
+
+			int SourceRowCount = getSourceRows(srcResultSet);
+
+			// get total rows count from the target table before comparison
+			int TargetRowCount = getTargetRows(trgResultSet);
+			// trgResultSet.first();
+
+			/**
+			 * Row count Validation between source and target
+			 */
+
+			if (Source_totalRows != Target_totalRows) {
+				System.out.println("Source and Target Row counts are Mismatched");
+				System.out.println("\n");
+			} else {
+
+				System.out.println("Source and Target Row counts are Matched");
+				System.out.println("\n");
+
+			}
+
+			Map<String, List<TableCellData>> srcMap = readDB(srcResultSet, srcSQL);
+			Map<String, List<TableCellData>> targetMap = readDB(trgResultSet, trgSQL);
+			String[] array = PKvalue.split(",");
+			Set<String> mySet = new HashSet<String>(Arrays.asList(array));
+			PrimaryKey = String.join(",", mySet);
+			//remove duplicates and pass it to primary key block
+			ResultSetMetaData srcRSMD = srcResultSet.getMetaData();
+			int srcColNum = srcRSMD.getColumnCount();
+
+			List<String> headerColumns = new ArrayList<String>();
+			for (int i = 1; i <= srcColNum; i++) {
+
+				headerColumns.add(srcRSMD.getColumnLabel(i));
+
+			}
+
+			System.out.println(headerColumns);
+
+			System.out.println(sourceFileName);
+			TableComparator compare = new TableComparatorImpl();
+			Map<String, List<TableCellData>> compareFiles = compare.compareFiles(targetMap, srcMap, headerColumns);
+			Iterator<String> key = compareFiles.keySet().iterator();
+			int rowIndexDM = 1, rowIndexRMS = 1, rowIndexRMT = 1;
+			// Make Path dynamic
+
+			// String Path = "C:\\Users\\rp15800\\Desktop\\Result\\"+sourceFileName+".xlsx";
+			String Path = getOutputfilefolder + "\\" + sourceFileName + ".xls";
+			System.out.println(Path);
+
+			if (key != null) {
+				ExcelReport.newWorkbook(Path);
+				ExcelReport.openExcel(Path);
+			}
+			while (key.hasNext()) {
+				flag = true;
+				String primaryKey = key.next();
+				List<TableCellData> list = compareFiles.get(primaryKey);
+				if (list.get(0).getStatus().equals(TableComparatorImpl.DATA_MISMATCH)) {
+					StringBuffer buffer = new StringBuffer();
+					for (TableCellData tableCellData : list) {
+						buffer.append(tableCellData.getCellValue());
+						buffer.append("*");
+						// comma issue
+					}
+					String resultDM = primaryKey + "=" + buffer.toString();
+					String[] DMarray = resultDM.split("\\t|\\?|!|=|\\[|\\]|\\{|\\}|\\*|/");
+					Datamissmatch++;
+					ExcelReport.writeToExcelDataMismatch(Path, rowIndexDM, DMarray,PrimaryKey);
+					//ExcelReport.isStillOpenOnWindows(ExcelReport.file);
+					// Thread.sleep(1000);
+
+					rowIndexDM++;
+				} else {
+					String[] columnNames = new String[headerColumns.size()];
+					columnNames = headerColumns.toArray(columnNames);
+					StringBuffer buffer = new StringBuffer();
+					for (TableCellData tableCellData : list) {
+						buffer.append(tableCellData.getCellValue());
+						buffer.append("*");
+					}
+					//
+				//System.out.println(buffer);
+					TableCellData tableCellData = list.get(list.size() - 1);
+
+					if (tableCellData.getStatus().equalsIgnoreCase("Row Missing in Target Table")) {
+						String resultRMT = primaryKey + "=" + buffer.toString();
+						String[] RMTarray = resultRMT.split("\\t|\\?|!|=|\\[|\\]|\\{|\\}|\\*");
+						rowMissTarget++;
+						ExcelReport.writeToExcelRowMissingTarget(Path, rowIndexRMT, RMTarray, columnNames,
+								PrimaryKey);
+						//ExcelReport.isStillOpenOnWindows(ExcelReport.file);
+						rowIndexRMT++;
+					} else if (tableCellData.getStatus().equalsIgnoreCase("Row Missing in Source Table")) {
+						String resultRMS = primaryKey + "=" + buffer.toString();
+						String[] RMSarray = resultRMS.split("\\t|\\?|!|=|\\[|\\]|\\{|\\}|\\*");
+						//("\\t|,|;|\\.|\\?|!|-|:|@|\\[|\\]|\\(|\\)|\\{|\\}|_|\\*|/")
+						rowMissSource++;
+						ExcelReport.writeToExcelRowMissingSource(Path, rowIndexRMS, RMSarray, columnNames,
+								PrimaryKey);
+						//ExcelReport.isStillOpenOnWindows(ExcelReport.file);
+						rowIndexRMS++;
+					}
+
+				}
+			}
+			if (flag) {
+				String SourceCount = "Row Count in Source  :  " + SourceRowCount;
+				String TargetCount = "Row Count in Target  :  " + TargetRowCount;
+				String RowMissingSource = "Row Missing in Source  :  " + rowMissSource;
+				String RowMissingTarget = "Row Missing in Target  :  " + rowMissTarget;
+				String Datamissed = "DataMismatched  :  " + Datamissmatch;
+				System.out.println("SourceCount :" +SourceCount);
+				System.out.println("TargetCount :" +TargetCount);
+				System.out.println("RowMissingSource :" +RowMissingSource);
+				System.out.println("RowMissingTarget :" +RowMissingTarget);
+				System.out.println("datamissed : " + Datamissed);
+				ExcelReport.writeToExcelSummary(Path, SourceCount, TargetCount, RowMissingSource, RowMissingTarget);
+				//ExcelReport.isStillOpenOnWindows(ExcelReport.file);
+			}
+		if(flag)
+		{
+			System.out.println("closing Excel");
+			ExcelReport.closeExcel();
+		}
+			System.out.println("Comparison done  :  " + sourceFileName + "  &  " + targetFileName);
+			System.out.println("\n");
+			Source_totalRows = 0;
+			Target_totalRows = 0;
+			System.out.println("Execution Completed...");
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, e.toString(), "Error!", JOptionPane.WARNING_MESSAGE);
+			System.out.println(e.getMessage());
+
+		}
+	}
+}
