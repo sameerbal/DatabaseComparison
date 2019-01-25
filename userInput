@@ -1,0 +1,17 @@
+package reporting;
+
+public class DbTest {
+public static void main(String[] args) {
+	try {
+		//SqlPath.userInput("sybase","orm_dw","devcld123","oraasswd14-scan.nam.nsroot.net:","8889","OPRSK3S","Mstrbi","Welcome01","citiarcmwdb1un1","2661","CITIARCIQUAT_CR1", "C:\\Users\\rp15800\\Desktop\\SOURCE", "C:\\Users\\rp15800\\Desktop\\target", "22");
+		//SqlPath.userInput("oracle","orm_dw","devcld123","oraasswd14-scan.nam.nsroot.net","8889","OPRSK3S","orm_dw","devcld123","oraasswd14-scan.nam.nsroot.net","8889","OPRSK3S", "C:\\Users\\rp15800\\Desktop\\SOURCE", "C:\\Users\\rp15800\\Desktop\\target","C:\\Users\\rp15800\\Desktop\\Result","4","2018-Q1", "2018-Q2");
+		SqlPath.userInput("oracle","orm_dw","devcld123","oraasswd14-scan.nam.nsroot.net","8889","OPRSK3S","orm_dw","devcld123","oraasswd14-scan.nam.nsroot.net","8889","OPRSK3S", "C:\\Users\\ta20150\\Desktop\\Source", "C:\\Users\\ta20150\\Desktop\\Target","C:\\Users\\ta20150\\Desktop\\Result","12","", "");
+		//SqlPath.userInput("sybase","orm_dw","devcld123","oraasswd14-scan.nam.nsroot.net","8889","OPRSK3S","Mstrbi","Welcome01","citiarcmwdb1un1","2661","NA", "C:\\Users\\rp15800\\Desktop\\SOURCE", "C:\\Users\\rp15800\\Desktop\\target","C:\\Users\\rp15800\\Desktop\\Result","7","2018-Q1", "2018-Q1");
+		//SqlPath.userInput("oracle","orm_dw","devcld123","oraasswd14-scan.nam.nsroot.net:","8889","OPRSK3S","orm_dw","devcld123","oraasswd14-scan.nam.nsroot.net:","8889","OPRSK3S", "C:\\Users\\rp15800\\Desktop\\SOURCE", "C:\\Users\\rp15800\\Desktop\\target", "4");
+		//SqlPath.userInput("sybase","orm_dw","devcld123","oraasswd14-scan.nam.nsroot.net:","8889","OPRSK3S","Mstrbi","Welcome01","citiarcmwdb1un1","2661","", "C:\\Users\\rp15800\\Desktop\\SOURCE", "C:\\Users\\rp15800\\Desktop\\target", "22");
+	} catch (Exception e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+}
+}
