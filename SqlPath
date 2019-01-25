@@ -1,0 +1,270 @@
+package reporting;
+
+import java.io.File;
+import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
+import java.util.Scanner;
+
+import javax.swing.JOptionPane;
+
+public class SqlPath {
+
+	//public static Properties prop;
+	public static SqlPath path = new SqlPath();
+	public static SqlQuery original = new SqlQuery();
+	public static Connection sourceConnection;
+	public static Connection targetConnection;
+	public static ResultSet srcResultSet, trgResultSet;
+	//public static Statement srcStatement;
+	//public static Statement trgStatement;
+	public static String sourceFileName, targetFileName;	
+	public static long startTime,endTime;
+	
+
+	
+
+	
+	public static void userInput(String getTrgDataBase,String getSrcUserName,String getSrcPassword,String getSrcHostName,String getSrcPortName,String getSrcSidServi,
+			String getTrgUserName,String getTrgPassword,String getTrgHostName,String getTrgPortName,String getTrgSidServi,
+			String getSrcSQLFoldr,String getTrgSQLFoldr,String getOutputfilefolder,String getTotlSQLsRun,String gettimeMarkKeyTextSource,String gettimeMarkKeyTextTarget) throws Exception {
+		
+		try {
+			startTime = System.currentTimeMillis();
+			source_and_target_Credentials.user_Source_Credentials_Setup(getSrcUserName,getSrcPassword,getSrcHostName,getSrcPortName,getSrcSidServi);	
+			
+			sourceConnection = databaseConnection.getConnection_Source();
+			
+			//sourceConnection = (Connection) Oc1.getConnection_Source();
+			
+			
+			if(getTrgDataBase.equalsIgnoreCase("Oracle")) {
+			
+			source_and_target_Credentials.user_Target_Credentials_Setup(getTrgUserName, getTrgPassword, getTrgHostName, getTrgPortName, getTrgSidServi);	
+			
+			targetConnection = databaseConnection.getConnection_Target();
+			}
+			else {
+				
+				
+				source_and_target_Credentials.user_Target_sybase_Credentials_Setup(getTrgUserName, getTrgPassword, getTrgHostName, getTrgPortName, getTrgSidServi);	
+				
+				targetConnection = databaseConnection.getConnection_Target();
+				
+				
+			}
+			
+			//targetConnection = (Connection) Oc1.getConnection_Target();
+
+			String sourceDirectory, targetDirectory;
+			//Scanner scan = new Scanner(System.in);
+			//System.out.print("Enter serial number of SQL separated with comma(,)" + " : ");
+			
+			String input = getTotlSQLsRun;
+			System.out.println(getSrcSQLFoldr);
+			//System.out.println("Enter Source Directory path :");
+			sourceDirectory = getSrcSQLFoldr;
+			//System.out.println("Enter Target Directory path :");
+			System.out.println(getTrgSQLFoldr);
+			targetDirectory = getTrgSQLFoldr;
+			
+			if (input.equalsIgnoreCase("all")) 
+			{
+				List<String> sourceFiles = new ArrayList<String>();
+				File[] directory = new File(sourceDirectory).listFiles();
+				for (File file : directory) {
+					if (file.isFile()) {
+						sourceFiles.add(file.getName());
+					}
+				}
+				String countNumberOfFiles[] = new String[directory.length];
+				int[] totalCount = new int[countNumberOfFiles.length];
+				for (int a = 0; a < countNumberOfFiles.length; a++) {
+					countNumberOfFiles[a] = sourceFiles.get(a).substring(0, 3);
+				}
+				
+				for(int i = 0;i < countNumberOfFiles.length;i++)
+				{
+					totalCount[i] = Integer.parseInt(countNumberOfFiles[i]);
+				}
+				path.FileNames(totalCount, sourceDirectory, targetDirectory,gettimeMarkKeyTextSource,gettimeMarkKeyTextTarget,getOutputfilefolder);
+			} 
+			else {
+				String StringarrayOfNames[] = input.split(",");
+				int[] arrayOfNames = new int[StringarrayOfNames.length];
+				for (int i = 0; i < StringarrayOfNames.length; i++) 
+				{
+					String numberAsString = StringarrayOfNames[i];
+					arrayOfNames[i] = Integer.parseInt(numberAsString);
+				}
+				path.FileNames(arrayOfNames, sourceDirectory, targetDirectory,gettimeMarkKeyTextSource,gettimeMarkKeyTextTarget,getOutputfilefolder);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			JOptionPane.showMessageDialog(null,e.toString(),"Error!",JOptionPane.WARNING_MESSAGE);
+			e.printStackTrace();
+		}
+	}
+
+	public static void FileNames(int[] arrayOfNames, String sourceDirectory, String targetDirectory,String gettimeMarkKeyTextSource,String gettimeMarkKeyTextTarget,String getOutputfilefolder) throws Exception {
+		try {
+			int i, j;
+			List<String> sourceResults = new ArrayList<String>();
+			List<String> targetResults = new ArrayList<String>();
+
+			File[] sourceFiles = new File(sourceDirectory).listFiles();
+			// If this pathname does not denote a directory, then listFiles() returns null.
+
+			for (File file : sourceFiles) {
+				if (file.isFile()) {
+					sourceResults.add(file.getName());
+				}
+			}
+			File[] targetFiles = new File(targetDirectory).listFiles();
+			// If this pathname does not denote a directory, then listFiles() returns null.
+
+			for (File file : targetFiles) {
+				if (file.isFile()) {
+					targetResults.add(file.getName());
+				}
+			}
+				for (i = 0; i < arrayOfNames.length; i++) {
+					for (j = 0; j < sourceResults.size(); j++) {
+						if ((arrayOfNames[i] == (Integer.parseInt(sourceResults.get(j).substring(0, 3))))) {
+							srcResultSet = original.sqlSourceQuery((sourceResults.get(j)), sourceDirectory, sourceConnection,gettimeMarkKeyTextSource);
+							sourceFileName = sourceResults.get(j);
+						}
+						if ((arrayOfNames[i] == (Integer.parseInt(targetResults.get(j).substring(0, 3))))) {
+							trgResultSet = original.sqlTargetQuery((targetResults.get(j)), targetDirectory, targetConnection,gettimeMarkKeyTextTarget);
+							targetFileName = targetResults.get(j);
+						}
+						
+
+					}
+					//Comparator.compare(srcResultSet, trgResultSet, sourceFileName, targetFileName);
+					
+					
+					System.out.println(SqlQuery.srcSQL);
+					System.out.println(SqlQuery.trgSQL);
+
+					String srcSQL=SqlQuery.srcSQL;
+					String trgSQL=SqlQuery.trgSQL;
+					
+					
+					//DBDriver.comparatorUtility(srcResultSet, trgResultSet, sourceFileName, targetFileName, SqlQuery.srcSQL, SqlQuery.trgSQL);
+					//source_and_target_Credentials.print_TargetResultset(trgResultSet);
+					
+					//source_and_target_Credentials.resultset_GetRow(trgResultSet);
+					//source_and_target_Credentials.resultset_GetRow(srcResultSet);
+					
+					DBDriver.comparatorUtility(srcResultSet, trgResultSet, sourceFileName, targetFileName, srcSQL, trgSQL,getOutputfilefolder);
+					
+					//Closing All Resultsets and Statements
+					/*
+					srcResultSet.close();
+					trgResultSet.close();
+					databaseConnection.srcResultSet.close();
+					databaseConnection.trgResultSet.close();
+					SqlQuery.srcResultSet.close();
+					SqlQuery.trgResultSet.close();
+					
+					databaseConnection.srcStatement.close();
+					databaseConnection.trgStatement.close();		
+					
+				*/
+					
+					
+					closeResultsets();
+					
+				
+				}
+
+//closing resultsets
+			
+/*
+			srcResultSet.close();
+			trgResultSet.close();
+			databaseConnection.srcResultSet.close();
+			databaseConnection.trgResultSet.close();
+			SqlQuery.srcResultSet.close();
+			SqlQuery.trgResultSet.close();
+			
+			databaseConnection.srcStatement.close();
+			databaseConnection.trgStatement.close();		
+			*/
+			//closing Connections
+				/*
+				
+				
+				
+				databaseConnection.connection.close();	
+				sourceConnection.close();
+				targetConnection.close();
+				
+				*/
+				closeDBConnections();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			JOptionPane.showMessageDialog(null,e.toString(),"Error!",JOptionPane.WARNING_MESSAGE);
+			e.printStackTrace();
+		}
+			
+		
+	}
+	
+	
+	public static void closeResultsets() {
+		
+		//Closing All Resultsets and Statements
+		
+		try {
+		System.out.println("Closed Resultsets");
+			srcResultSet.close();
+			trgResultSet.close();
+			databaseConnection.srcResultSet.close();
+			databaseConnection.trgResultSet.close();
+			SqlQuery.srcResultSet.close();
+			SqlQuery.trgResultSet.close();
+			
+			databaseConnection.srcStatement.close();
+			databaseConnection.trgStatement.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			JOptionPane.showMessageDialog(null,e.toString(),"Error!",JOptionPane.WARNING_MESSAGE);
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public static void closeDBConnections() {
+		try {
+			System.out.println("closed Connections");
+			//databaseConnection.connection.close();	
+			if(!sourceConnection.isClosed()) {
+			sourceConnection.close();
+			}
+			if(!targetConnection.isClosed()) {
+			targetConnection.close();
+			}
+			if(!(databaseConnection.connection.isClosed())) {
+			databaseConnection.connection.close();
+			}
+			endTime = System.currentTimeMillis();
+			System.out.println("It took " + (endTime - startTime)/1000 + " seconds");
+			System.out.println("It took " + ((endTime - startTime)/1000)/60 + " minutes");
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			JOptionPane.showMessageDialog(null,e.toString(),"Error!",JOptionPane.WARNING_MESSAGE);
+			e.printStackTrace();
+		}
+		
+	}
+	
+}
