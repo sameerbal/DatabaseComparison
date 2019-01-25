@@ -1,0 +1,135 @@
+package reporting;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+public class TableComparatorImpl implements TableComparator {
+
+	public static final String DATA_MISMATCH = "Data MisMatch";
+	public static final String ROW_MISSING_IN_TARGET = "Row Missing in Target Table";
+	public static final String ROW_MISSING_IN_SOURCE = "Row Missing in Source Table";
+	public static final String DATA_MATCH = "Data Matched";
+	public static final String ROW_MISSING = "Row Missing";
+
+	@Override
+	public Map<String, List<TableCellData>> compareFiles(Map<String, List<TableCellData>> leftSide,
+			Map<String, List<TableCellData>> rightSide, List<String> columnNames) {
+	     return getDiff(leftSide, rightSide, columnNames);
+	}
+
+	
+	private Map<String, List<TableCellData>> getDiff(Map<String, List<TableCellData>> mapA,
+			Map<String, List<TableCellData>> mapB, List<String> columnNames) {
+
+		Map<String, List<TableCellData>> mapAProxy = new TreeMap<String, List<TableCellData>>();
+		Map<String, List<TableCellData>> dataMismatchMap = new TreeMap<String, List<TableCellData>>();
+		Map<String, List<TableCellData>> rowMissing = new TreeMap<String, List<TableCellData>>();
+
+		mapAProxy.putAll(mapA);
+		for (String s : mapB.keySet()) {
+			if (mapAProxy.containsKey(s)) {
+				List<TableCellData> leftSideRowData = mapAProxy.get(s);
+				List<TableCellData> rightSideRowData = mapB.get(s);
+				List<TableCellData> dataMismatch = compareValues(leftSideRowData, rightSideRowData, columnNames);
+				if (dataMismatch.size()>0) {
+					dataMismatchMap.put(s, dataMismatch);
+
+				} else {
+				
+					mapAProxy.remove(s);
+				}
+			} else {
+
+				List<TableCellData> list = new ArrayList<TableCellData>(mapB.get(s));
+				addMissingRow(list, ROW_MISSING_IN_TARGET);
+				rowMissing.put(s, list);
+			}
+
+		}
+        addMissingRow(mapAProxy, ROW_MISSING_IN_SOURCE);
+		mapAProxy.putAll(dataMismatchMap);
+		mapAProxy.putAll(rowMissing);
+		return mapAProxy;
+	}
+	
+	private void addMissingRow(Map<String, List<TableCellData>> mapAProxy, String status)
+	{
+	     Iterator<List<TableCellData>> values = mapAProxy.values().iterator();	
+	     while(values.hasNext())
+	     {
+	    	 List<TableCellData> next = values.next();
+	    	 for (TableCellData tableCellData : next) {
+				tableCellData.setStatus(status);
+			}
+	     }
+	}
+	
+	private void addMissingRow(List<TableCellData> list, String status)
+	{
+		for (TableCellData tableCellData : list) {
+			tableCellData.setStatus(status);
+		}
+	}
+
+	
+	
+
+	private static List<TableCellData> compareValues(List<TableCellData> l1, List<TableCellData> l2, List<String> columnNames) {
+
+		List<TableCellData>  dataMissing = new ArrayList<TableCellData>();
+		if (l1 == null || l2 == null) {
+			return dataMissing;
+		}
+		if (l1.size() != l2.size()) {
+			return dataMissing;
+		}
+		for (int i = 0; i < l1.size(); i++) {
+			//System.out.println("em"+l1.get(i).getCellValue());
+			if ((l1.get(i).getCellValue() != null && l2.get(i).getCellValue() != null)) {
+				if (!l1.get(i).getCellValue().equals(l2.get(i).getCellValue())) {
+					TableCellData leftSideCell = new TableCellData();
+					leftSideCell.setCellValue(columnNames.get(i)+"{ "+l2.get(i).getCellValue()+"*"+l1.get(i).getCellValue()+" }");
+					leftSideCell.setStatus(DATA_MISMATCH);
+					dataMissing.add(leftSideCell);
+				
+				}
+			}
+			else if((l1.get(i).getCellValue() != null && l2.get(i).getCellValue() == null)) {
+		
+				TableCellData leftSideCell = new TableCellData();
+				leftSideCell.setCellValue(columnNames.get(i)+"{ "+"null"+"*"+l1.get(i).getCellValue()+" }");
+				leftSideCell.setStatus(DATA_MISMATCH);
+				dataMissing.add(leftSideCell);
+		
+		}
+			
+			
+			else if((l1.get(i).getCellValue()== null && l2.get(i).getCellValue() != null)) {
+				
+				TableCellData leftSideCell = new TableCellData();
+				leftSideCell.setCellValue(columnNames.get(i)+"{ "+l2.get(i).getCellValue()+"*"+"null"+" }");
+				leftSideCell.setStatus(DATA_MISMATCH);
+				dataMissing.add(leftSideCell);
+				
+			}
+			
+			/*
+			else {
+				TableCellData leftSideCell = new TableCellData();
+				leftSideCell.setCellValue(columnNames.get(i)+"( "+"null"+","+"null"+" )");
+				leftSideCell.setStatus(DATA_MISMATCH);
+				dataMissing.add(leftSideCell);
+			}
+			
+		*/
+
+	}
+
+		return dataMissing;
+
+}
+	
+}
