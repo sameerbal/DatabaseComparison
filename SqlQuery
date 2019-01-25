@@ -1,0 +1,227 @@
+package reporting;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.sql.Connection;
+import java.sql.ResultSet;
+
+import javax.swing.JOptionPane;
+
+import java.lang.*;
+
+
+
+//import org.apache.commons.*;
+
+
+
+
+public class SqlQuery {
+	
+	public static String trgSQL,srcSQL;
+	public static SqlPath path = new SqlPath();
+	public static SqlQuery query = new SqlQuery();
+	//public static Connection sourceConnection;
+	//public static Connection targetConnection;
+	public static  ResultSet srcResultSet;
+	public static ResultSet trgResultSet;
+	
+	public static databaseConnection Oc1=new databaseConnection();
+	
+	// databaseConnection Oc1 = new databaseConnection();
+	/*
+	public static ArrayList<String> ar = new ArrayList<String>();
+	public static ArrayList<String> ar1 = new ArrayList<String>();
+	
+	public static ArrayList<String> sourceSqlReturn()
+	{
+		return ar;
+	}
+	
+	public static ArrayList<String> targetSqlReturn()
+	{
+		return ar1;
+	}
+	
+	*/
+	//sourceSql method which will return String of SQLQuery
+	
+	  
+	
+	public static ResultSet sqlSourceQuery(String sourceFile,String sourceFilePath,Connection sourceConnection,String gettimeMarkKeyTextSource) throws Exception
+    {
+    try {
+		String srcSQLPath = sourceFilePath+"\\"+sourceFile;
+		String [] getSrcSqlId = srcSQLPath.split("\\\\"); //split to get SQL file name
+		String srcRdPath = new String(); 
+		StringBuffer srcStrBuf = new StringBuffer(); 
+		
+		FileReader srcFileRdr = new FileReader(new File(srcSQLPath));
+		BufferedReader srcBufRdr = new BufferedReader(srcFileRdr);
+		
+		while((srcRdPath = srcBufRdr.readLine()) != null) 
+		{ 
+		      // srcStrBuf.append(srcRdPath);
+			
+			
+			srcStrBuf.append(srcRdPath.trim());
+			
+			
+		       
+			//srcSQL = srcStrBuf.toString();
+		       srcStrBuf.append(" "); 
+			//srcResultSet=Oc1.execute_SourceQuery(sourceConnection,srcSQL);
+			//source_and_target_Credentials.print_SourceResultset(srcResultSet);
+		} 
+		
+		
+		srcSQL = srcStrBuf.toString();
+		
+		if(srcSQL.contains("@TIMEMARKKEY_SOURCE")) {
+		
+		srcSQL=getTimemarkKey(gettimeMarkKeyTextSource,srcSQL);
+		
+		}
+		 System.out.println(srcSQL);
+		//srcSQL = srcSQL.replaceAll("[\r\n]+", " ");
+   // srcSQL = srcSQL.replaceAll("\\s+", " ");
+   // srcSQL = srcSQL.toUpperCase();
+		//srcSQL = StringUtils.normalizeSpace(srcSQL);
+		//System.out.println();
+		//System.out.println(srcSQL);
+		srcResultSet=Oc1.execute_SourceQuery(sourceConnection,srcSQL);
+		//source_and_target_Credentials.print_SourceResultset(srcResultSet);
+
+		
+		//Calling Connection
+		
+		//sourceConnection=(Connection) Oc1.getConnection_Source();				
+
+		//srcResultSet=Oc1.execute_SourceQuery(sourceConnection,srcSQL);
+
+   // source_and_target_Credentials.print_SourceResultset(srcResultSet);
+		
+		//ar.add(srcSQL);
+	} catch (Exception e) {
+		// TODO Auto-generated catch block
+		JOptionPane.showMessageDialog(null,e.toString(),"Error!",JOptionPane.WARNING_MESSAGE);
+		e.printStackTrace();
+	}
+    
+    return srcResultSet;
+    }
+	
+	//targetSql method which will return Stringbuffer of SQLQuery
+	public static ResultSet sqlTargetQuery(String targetFile,String targetFilePath,Connection targetConnection,String gettimeMarkKeyTextTarget) throws Exception
+    {
+    try {
+		String trgSQLPath = targetFilePath+"\\"+targetFile;
+		String [] getTrgSqlId = trgSQLPath.split("\\\\"); //split to get SQL file name
+		String trgRdPath = new String(); 
+		StringBuffer trgStrBuf = new StringBuffer(); 
+		
+		FileReader trgFileRdr = new FileReader(new File(trgSQLPath));
+		BufferedReader trgBufRdr = new BufferedReader(trgFileRdr);
+		
+		while((trgRdPath = trgBufRdr.readLine()) != null) 
+		{ 
+		       //trgStrBuf.append(trgRdPath);
+			trgStrBuf.append(trgRdPath.trim());
+			
+		       trgStrBuf.append(" ");
+		      //trgStrBuf.append("\t");
+		} 
+		trgSQL = trgStrBuf.toString();
+		if(trgSQL.contains("@TIMEMARKKEY_TARGET")) {
+		
+		trgSQL=getTimemarkKeyTarget(gettimeMarkKeyTextTarget,trgSQL);
+		}
+		//trgSQL = trgSQL.replaceAll("[\r\n]+", " ");
+		//trgSQL = trgSQL.replaceAll("\\s+", " ");
+   //trgSQL = StringUtils.normalizeSpace(trgSQL);
+   // trgSQL = trgSQL.toUpperCase();
+		//System.out.println(trgSQL);
+		//System.out.println();
+		trgResultSet=Oc1.execute_targetQuery(targetConnection,trgSQL);
+		//source_and_target_Credentials.print_TargetResultset(trgResultSet);    
+		
+		//ar1.add(trgSQL);
+	} catch (Exception e) {
+		// TODO Auto-generated catch block
+		JOptionPane.showMessageDialog(null,e.toString(),"Error!",JOptionPane.WARNING_MESSAGE);
+		e.printStackTrace();
+	}
+    return trgResultSet;
+    }
+//closing Connection.
+	
+	
+	
+	public static String getTimemarkKey(String  gettimeMarkKeyText,String SQL ) { 
+	/*
+	StringBuffer srcsplit = new StringBuffer(); 
+    String TimemarkKey=gettimeMarkKeyText;
+    String splitdata="TIMEMARK_KEY = ";
+    String SQLfinal=splitdata+"'"+gettimeMarkKeyText+"'";
+   
+    System.out.println(SQLfinal);
+    
+    String[] SouceSQLarray=srcSQL.split(splitdata);
+  //  String sourcesqlsplitted=SouceSQLarray[0];
+    srcsplit.append(SouceSQLarray[0]);
+    srcsplit.append(SQLfinal);
+    srcsplit.append(SouceSQLarray[1]);
+    return srcSQL = srcsplit.toString();
+   
+	*/	
+		String  SQL_withTimemarkkey	=null;
+		
+		try {
+			 SQL_withTimemarkkey=SQL.replace("@TIMEMARKKEY_SOURCE", gettimeMarkKeyText);
+			
+			//return SQL_withTimemarkkey;
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			JOptionPane.showMessageDialog(null,e.toString(),"Error!",JOptionPane.WARNING_MESSAGE);
+			e.printStackTrace();
+		}
+		return SQL_withTimemarkkey;
+		
+		
+	
+	}
+	public static String getTimemarkKeyTarget(String  gettimeMarkKeyTextTarget,String TargetSQL ) { 
+		/*
+		StringBuffer srcsplit = new StringBuffer(); 
+	    String TimemarkKey=gettimeMarkKeyText;
+	    String splitdata="TIMEMARK_KEY = ";
+	    String SQLfinal=splitdata+"'"+gettimeMarkKeyText+"'";
+	   
+	    System.out.println(SQLfinal);
+	    
+	    String[] SouceSQLarray=srcSQL.split(splitdata);
+	  //  String sourcesqlsplitted=SouceSQLarray[0];
+	    srcsplit.append(SouceSQLarray[0]);
+	    srcsplit.append(SQLfinal);
+	    srcsplit.append(SouceSQLarray[1]);
+	    return srcSQL = srcsplit.toString();
+	   
+		*/		
+			
+		String  SQL_withTimemarkkeyTarget=null;
+			try {
+				 SQL_withTimemarkkeyTarget=TargetSQL.replace("@TIMEMARKKEY_TARGET", gettimeMarkKeyTextTarget);
+				
+				//return SQL_withTimemarkkeyTarget;
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				JOptionPane.showMessageDialog(null,e.toString(),"Error!",JOptionPane.WARNING_MESSAGE);
+				e.printStackTrace();
+			}
+			return SQL_withTimemarkkeyTarget;
+			
+			
+		
+		}
+}
